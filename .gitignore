@@ -1,2 +1,7 @@
 *~
 secrets.yaml
+build/
+.vscode/
+CMakeFiles/
+CMakeCache.txt
+/sdkconfig
