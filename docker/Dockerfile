@@ -54,9 +54,9 @@ ENV PATH=${PATH}:${ESP8266_SDK_DIR}/tools
 
 
 ## Let's build!
-WORKDIR ${ESP8266_SDK_DIR}/examples/get-started/hello_world
+WORKDIR /home_controller/home_controller
 
 # Copy sdk config to current dir
 COPY sdkconfig .
 
-CMD make all
+CMD idf.py flash monitor
