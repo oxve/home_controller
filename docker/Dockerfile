@@ -32,14 +32,12 @@ ENV ESP8266_SDK_DIR=${TOOLCHAIN_DIR}/esp8266_sdk
 RUN mkdir -p ${XTENSA_SDK_DIR}
 RUN mkdir -p ${ESP8266_SDK_DIR}
 
-ENV IDF_PATH=${ESP8266_SDK_DIR}
-ENV PATH=${PATH}:${XTENSA_SDK_DIR}/bin
-
 ## Download ESP8266 SDK
 # https://github.com/espressif/ESP8266_RTOS_SDK/blob/master/README.md
 RUN git clone --recursive https://github.com/espressif/ESP8266_RTOS_SDK.git ${ESP8266_SDK_DIR}
 
-## Install ESP8266 python tooling dependencies
+## Install ESP8266 tools and dependencies
+RUN ${ESP8266_SDK_DIR}/install.sh
 RUN python -m pip install -r ${ESP8266_SDK_DIR}/requirements.txt
 
 ## Download and extract xtensa SDK
@@ -48,6 +46,11 @@ ENV XTENSA_SDK=xtensa-lx106-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz
 RUN curl -O https://dl.espressif.com/dl/${XTENSA_SDK} \
     && tar xvf ${XTENSA_SDK} -C ${TOOLCHAIN_DIR} \
     && rm ${XTENSA_SDK}
+
+# Expose tool locations
+ENV IDF_PATH=${ESP8266_SDK_DIR}
+ENV PATH=${PATH}:${XTENSA_SDK_DIR}/bin
+ENV PATH=${PATH}:${ESP8266_SDK_DIR}/tools
 
 
 ## Let's build!
