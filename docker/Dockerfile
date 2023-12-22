@@ -1,11 +1,11 @@
+# ESP8266 toolchain uses py2.7 which is only available up to buster
 FROM debian:buster-slim
 
 RUN apt-get update \
     && apt-get install -yq \
+        # ESP8266 toolchain dependencies
         bison \
         cmake \
-        curl \
-        git \
         gcc \
         make \
         flex \
@@ -14,6 +14,9 @@ RUN apt-get update \
         python2.7 \
         python-pip \
         python-serial \
+        # Other
+        curl \
+        git \
     && apt-get purge -yq -h \
     && apt-get autoremove -yq --purge \
     && apt-get clean \
@@ -50,7 +53,7 @@ RUN curl -O https://dl.espressif.com/dl/${XTENSA_SDK} \
 ## Let's build!
 WORKDIR ${ESP8266_SDK_DIR}/examples/get-started/hello_world
 
-# Copy sdk config to current dir.
+# Copy sdk config to current dir
 COPY sdkconfig .
 
 CMD make all
