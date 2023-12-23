@@ -6,8 +6,10 @@
 #include "esp_log.h"
 #include "esp_system.h"
 
+#include "include/wifi.h"
 
-static const char *TAG = "HOME_CONTROLLER_MQTT";
+
+static const char *TAG = "HOME_CONTROLLER";
 
 void log_setup(void) {
   esp_log_level_set("*", ESP_LOG_INFO);
@@ -26,5 +28,5 @@ void app_main(void) {
 
   log_setup();
 
-  // TODO
+  wifi_init_sta();
 }
