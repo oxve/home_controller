@@ -1,19 +1,17 @@
-# ESP8266 toolchain uses py2.7 which is only available up to buster
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 RUN apt-get update \
     && apt-get install -yq \
-        # ESP8266 toolchain dependencies
-        bison \
+        # ESP32 toolchain dependencies
         cmake \
-        gcc \
-        make \
-        flex \
-        gperf \
-        libncurses-dev \
-        python2.7 \
-        python-pip \
-        python-serial \
+        ninja-build \
+        ccache \
+        libffi-dev \
+        libssl-dev \
+        dfu-util \
+        libusb-1.0-0 \
+        python3.11 \
+        python3.11-venv \
         # Other
         curl \
         git \
@@ -26,37 +24,30 @@ RUN apt-get update \
 ## Set up toolchains
 ENV TOOLCHAIN_DIR=/toolchain
 
-ENV XTENSA_SDK_DIR=${TOOLCHAIN_DIR}/xtensa-lx106-elf
-ENV ESP8266_SDK_DIR=${TOOLCHAIN_DIR}/esp8266_sdk
+ENV ESP_IDF_SDK_DIR=${TOOLCHAIN_DIR}/esp32_sdk
+RUN mkdir -p ${ESP_IDF_SDK_DIR}
 
-RUN mkdir -p ${XTENSA_SDK_DIR}
-RUN mkdir -p ${ESP8266_SDK_DIR}
-
-## Download ESP8266 SDK
-# https://github.com/espressif/ESP8266_RTOS_SDK/blob/master/README.md
-RUN git clone --recursive https://github.com/espressif/ESP8266_RTOS_SDK.git ${ESP8266_SDK_DIR}
-
-## Install ESP8266 tools and dependencies
-RUN ${ESP8266_SDK_DIR}/install.sh
-RUN python -m pip install -r ${ESP8266_SDK_DIR}/requirements.txt
-
-## Download and extract xtensa SDK
-# https://docs.espressif.com/projects/esp8266-rtos-sdk/en/latest/get-started/linux-setup.html
-ENV XTENSA_SDK=xtensa-lx106-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz
-RUN curl -O https://dl.espressif.com/dl/${XTENSA_SDK} \
-    && tar xvf ${XTENSA_SDK} -C ${TOOLCHAIN_DIR} \
-    && rm ${XTENSA_SDK}
+## Download ESP-IDF
+# https://github.com/espressif/esp-idf/blob/release/v5.2/README.md
+ENV ESP_IDF_REPO=https://github.com/espressif/esp-idf.git
+ENV ESP_IDF_VERSION=v5.1.2
+RUN git clone -b ${ESP_IDF_VERSION} --recursive ${ESP_IDF_REPO} ${ESP_IDF_SDK_DIR}
 
 # Expose tool locations
-ENV IDF_PATH=${ESP8266_SDK_DIR}
-ENV PATH=${PATH}:${XTENSA_SDK_DIR}/bin
-ENV PATH=${PATH}:${ESP8266_SDK_DIR}/tools
+ENV IDF_PATH=${ESP_IDF_SDK_DIR}
+ENV PATH=${PATH}:${ESP_IDF_SDK_DIR}/tools
 
-
-## Let's build!
 WORKDIR /home_controller/home_controller
 
-# Copy sdk config to current dir
-COPY sdkconfig .
+RUN ${ESP_IDF_SDK_DIR}/install.sh
 
-CMD idf.py flash monitor
+# Copy sdk config to current dir and load idf env.
+COPY sdkconfig sdkconfig
+COPY sdkconfig.defaults sdkconfig.defaults
+# TODO: Figure out why copying this file doesn't work.
+# COPY idf-env.sh .
+
+ENTRYPOINT [ "/home_controller/docker/idf-env.sh" ]
+
+## Let's build!
+CMD python3 ${ESP_IDF_SDK_DIR}/tools/idf.py all
