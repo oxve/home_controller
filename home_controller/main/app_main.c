@@ -9,11 +9,13 @@
 
 #include "include/mqtt.h"
 #include "include/wifi.h"
+#include "sensors/sensors.h"
 
 
 static const char *TAG = "HOME_CONTROLLER";
 
 void log_setup(void) {
+  // TODO: Fix these
   esp_log_level_set("*", ESP_LOG_INFO);
   esp_log_level_set("MQTT_CLIENT", ESP_LOG_VERBOSE);
   esp_log_level_set("MQTT_EXAMPLE", ESP_LOG_VERBOSE);
@@ -33,5 +35,7 @@ void app_main(void) {
   ESP_ERROR_CHECK(nvs_flash_init());
   wifi_init_sta();
 
-  mqtt_app_start();
+  mqtt_connect();
+
+  sensors_sht3x_init();
 }

@@ -1,5 +1,7 @@
 FROM debian:bookworm-slim
 
+ENV WORKDIR=/home_controller/home_controller
+
 RUN apt-get update \
     && apt-get install -yq \
         # ESP32 toolchain dependencies
@@ -37,17 +39,20 @@ RUN git clone -b ${ESP_IDF_VERSION} --recursive ${ESP_IDF_REPO} ${ESP_IDF_SDK_DI
 ENV IDF_PATH=${ESP_IDF_SDK_DIR}
 ENV PATH=${PATH}:${ESP_IDF_SDK_DIR}/tools
 
-WORKDIR /home_controller/home_controller
-
+# Install ESP-IDF dependencies
 RUN ${ESP_IDF_SDK_DIR}/install.sh
 
-# Copy sdk config to current dir and load idf env.
-COPY sdkconfig sdkconfig
-COPY sdkconfig.defaults sdkconfig.defaults
-# TODO: Figure out why copying this file doesn't work.
-# COPY idf-env.sh .
+## Additional components. Must be cloned into /components dir.
+# Clone sensors lib
+ENV ESP_COMPONENTS_DIR=/components/esp-idf-lib
+ENV ESP_COMPONENTS_REPO=https://github.com/UncleRus/esp-idf-lib.git
+ENV ESP_COMPONENTS_VERSION=0.9.4
+RUN git clone -b ${ESP_COMPONENTS_VERSION} ${ESP_COMPONENTS_REPO} ${ESP_COMPONENTS_DIR}
 
-ENTRYPOINT [ "/home_controller/docker/idf-env.sh" ]
+WORKDIR $WORKDIR
+
+
+ENTRYPOINT [ "./idf-env.sh" ]
 
 ## Let's build!
 CMD python3 ${ESP_IDF_SDK_DIR}/tools/idf.py all

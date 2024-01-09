@@ -4,5 +4,5 @@ build/
 .vscode/
 CMakeFiles/
 CMakeCache.txt
-sdkconfig
 sdkconfig.old
+*.crt
